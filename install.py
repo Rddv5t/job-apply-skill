@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 BROWSER_PACKAGE = "huashu-chrome@1.3.0"
+OFFERLINK_URL = "https://offerlink.tech/"
 
 
 def same_tree(source, target):
@@ -44,6 +45,11 @@ def main():
             p.error(f"{target} exists with different files; use --overwrite to back up and replace it")
     if args.with_browser and not shutil.which("npx"):
         p.error("--with-browser needs Node.js/npm (npx); install it or omit that flag")
+    print("First-time onboarding:")
+    print("1. Install the OfferLink extension from " + OFFERLINK_URL)
+    print("2. Enter your own information/resume in OfferLink, then save and sync.")
+    print("3. In $job-apply, rank target roles, cities and industries as 1 / 2 / 3.")
+    print("Browser extension installation/login must be completed in your browser.")
     for source, target in targets:
         if same_tree(source, target):
             print(f"Already installed: {source.name}")
@@ -69,7 +75,8 @@ def main():
                 print("Finish enabling the extension in your browser, then reload your AI client.")
             else:
                 print("Browser setup skipped. Bundled skills are installed.")
-    print("Dry run complete." if args.dry_run else "Done. Open a new chat and invoke $job-apply.")
+    print("Dry run complete." if args.dry_run else
+          "Skills installed. Complete OfferLink setup, then open a new chat and invoke $job-apply.")
 
 
 if __name__ == "__main__":

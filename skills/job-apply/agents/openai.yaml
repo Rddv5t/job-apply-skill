@@ -1,4 +1,4 @@
 interface:
   display_name: "求职投递助手"
   short_description: "根据岗位与地点偏好筛选、公司去重、浏览器投递并持续维护求职进度"
-  default_prompt: "使用 $job-apply，根据我的简历和偏好筛选岗位，先查历史投递再申请，并更新进度表。"
+  default_prompt: "使用 $job-apply，先引导我安装 OfferLink 并录入简历，再询问岗位、城市、行业各自的 1/2/3 优先级，然后查重投递并更新进度表。"
