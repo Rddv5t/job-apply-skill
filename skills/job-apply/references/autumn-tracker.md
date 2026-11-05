@@ -1,4 +1,4 @@
-# 本地替代方案：autumn-job-assistant-tracker
+# 首选资料工具与升级基础：autumn-job-assistant-tracker
 
 上游：[ljkss/autumn-job-assistant-tracker](https://github.com/ljkss/autumn-job-assistant-tracker)。
 本次核对提交：a24b328aef7d62bf81ee4d4581b701a45ebe848e。
@@ -23,7 +23,9 @@ python install.py --with-tracker
 
 由使用者打开 chrome://extensions/（Edge 使用 edge://extensions/），自行启用开发者模式、点击“加载已解压的扩展程序”并选择输出目录。保持该目录存在，不将临时目录当长期扩展路径。
 
-本仓库不附带上游扩展源码。核对时上游没有 LICENSE 文件，因此以使用者直接下载的独立依赖接入，不将其源码复制到本仓库的 MIT 许可范围。
+本仓库不附带上游扩展源码。截至 2026-11-05 核对时，上游文件与 README 中未发现 LICENSE 或明确许可声明。保留作者 ljkss、仓库链接及固定提交；本项目 MIT 仅适用于自己的原创接入代码。直接下载、本地适配或注明出处均不等于获得修改、再分发授权。若要公开发布包含上游代码的改版扩展，先确认原作者授权或适用许可证，并按其要求保留声明。
+
+后续升级继续以该资料工具为基础，保留已保存的资料、获奖、校园及自定义模块；不重复初始化或用旧备份覆盖。上游更新时先检查许可与提交差异，在独立目录验证兼容脚本，再备份并由用户重新加载扩展；不将固定提交自动改成未经验证的 main。
 
 兼容处理（仅指定提交）：
 

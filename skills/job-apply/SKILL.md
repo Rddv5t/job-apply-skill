@@ -11,6 +11,8 @@ description: 根据简历和用户偏好筛选校招、社招或实习岗位，�
 
 首次准备实际投递时，先阅读并执行 [首次使用流程](references/onboarding.md)：引导使用者选择资料工具（优先本地 autumn tracker 兼容版；已有 OfferLink 可继续用） → 使用者录入、保存并核对自己的个人信息与简历 → 再询问意向岗位、意向城市、意向行业，分别按 1、2、3 从高到低排列。已有安装、资料或明确排序时复用并核对，不重复初始化；仅整理历史进度时不强制安装插件。
 
+默认以 [ljkss/autumn-job-assistant-tracker](https://github.com/ljkss/autumn-job-assistant-tracker) 为资料库和辅助填表基础，复用用户已有安装与最新保存资料，再应用本 skill 的兼容升级；不强制改用 OfferLink。接入文档保留作者、来源和固定提交，不将第三方代码声明为本项目原创或纳入本项目 MIT 许可。
+
 资料插件负责个人资料与辅助填表，job-browser-setup 是浏览器控制配置。扩展启用和登录交由使用者。不能把本包安装成功当成扩展已加载或个人资料已录入。本地方案的安装、已验证能力、限制与备份互通见 [本地扩展接入](references/autumn-tracker.md)；不要把基础字段测试推断为所有招聘网站均适配。
 
 ## 建立配置
