@@ -29,6 +29,8 @@ def main():
     p.add_argument("--overwrite", action="store_true")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--with-browser", action="store_true")
+    p.add_argument("--with-tracker", action="store_true",
+                   help="Prepare the pinned local autumn tracker extension instead of requiring OfferLink")
     args = p.parse_args()
     root = Path(__file__).resolve().parent
     skills = sorted((root / "skills").iterdir())
@@ -46,8 +48,9 @@ def main():
     if args.with_browser and not shutil.which("npx"):
         p.error("--with-browser needs Node.js/npm (npx); install it or omit that flag")
     print("First-time onboarding:")
-    print("1. Install the OfferLink extension from " + OFFERLINK_URL)
-    print("2. Enter your own information/resume in OfferLink, then save and sync.")
+    print("1. Load the prepared local autumn tracker extension." if args.with_tracker else
+          "1. Choose local autumn tracker (--with-tracker) or OfferLink: " + OFFERLINK_URL)
+    print("2. Enter and verify your own information/resume in the chosen extension.")
     print("3. In $job-apply, rank target roles, cities and industries as 1 / 2 / 3.")
     print("Browser extension installation/login must be completed in your browser.")
     for source, target in targets:
@@ -64,6 +67,17 @@ def main():
             target.rename(backup)
             print(f"Backed up: {backup}")
         shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    if args.with_tracker:
+        tracker_dest = args.target.expanduser().absolute().parent / "job-apply-runtime" / (
+            "autumn-tracker-" + "a24b328" + "-compat-v2")
+        command = [sys.executable, str(root / "skills/job-apply/scripts/prepare_autumn_tracker.py"),
+                   "--dest", str(tracker_dest)]
+        if args.dry_run:
+            print("Prepare local tracker: " + " ".join(command))
+        elif (tracker_dest / "JOB_APPLY_LOCAL_PATCH.json").exists():
+            print("Local tracker is already prepared: " + str(tracker_dest))
+        else:
+            subprocess.run(command, check=True)
     if args.with_browser:
         command = [shutil.which("npx"), "-y", BROWSER_PACKAGE, "install"]
         print("Browser dependency: " + " ".join(command))
@@ -76,7 +90,7 @@ def main():
             else:
                 print("Browser setup skipped. Bundled skills are installed.")
     print("Dry run complete." if args.dry_run else
-          "Skills installed. Complete OfferLink setup, then open a new chat and invoke $job-apply.")
+          "Skills installed. Complete your profile tool setup, then open a new chat and invoke $job-apply.")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 {
+  "profile_provider": "autumn-local",
   "role_priority": ["产品经理", "售前工程师", "售后工程师"],
   "industry_priority": ["机器人", "智能硬件", "制造业"],
   "allowed_locations": ["城市甲", "城市乙"],

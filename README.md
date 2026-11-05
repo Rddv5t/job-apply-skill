@@ -12,11 +12,12 @@
 | job-browser-setup | 配置浏览器工具，验证连接，交接登录、验证码和扫码 |
 | tracker.py | 无第三方 Python 依赖，合并 JSON 记录、筛选候选、导出 CSV 与可搜索 HTML |
 | install.py | 将两个 skill 安装到 Codex，按需安装 huashu-chrome 浏览器工具 |
+| 本地简历助手接入 | 按指定提交下载 autumn tracker，移除示例资料与缺失字段默认推断，支持备份互通 |
 
 ## 首次使用顺序
 
-1. **先安装 OfferLink**：进入 [OfferLink 官网](https://offerlink.tech/)，按官网入口把插件安装到自己使用的 Chrome 或 Edge，完成登录。
-2. **录入自己的信息和简历**：进入“我的简历”，导入并补齐基本资料、教育、实习与项目等信息，保存并同步，核对日期与附件是否一致。
+1. **先配置资料工具**：优先运行下面的 --with-tracker 安装本地秋招助手兼容版；已有或偏好 [OfferLink](https://offerlink.tech/) 也可继续使用。
+2. **录入自己的信息和简历**：本地扩展进入“我的简历资料库”，按字段录入或导入 JSON；OfferLink 进入“我的简历”。核对日期与附件是否一致。本地扩展不承诺 PDF/DOCX 解析，附件从招聘页面上传。
 3. **再告诉助手三组意向排序**：意向工作岗位、意向工作城市、意向行业分别按 **1 → 2 → 3** 排列，1 为最高优先级。
 4. **补充限制与已投记录**：说明是否只考虑列出的城市、海外排除地区和已投公司，随后开始查重与筛选。
 
@@ -33,7 +34,9 @@
 
 可以少于三个意向，无需凑满。城市优先级与“只去哪些城市”分别记录；skill 不会默认套用作者的偏好。具体流程见 [首次使用引导](skills/job-apply/references/onboarding.md)。
 
-OfferLink 与浏览器控制工具是两项不同准备。OfferLink 的插件启用、登录和个人资料录入需要使用者在浏览器完成；本包安装器会给出官方入口和下一步提示，不会静默安装扩展。OfferLink 官网说明它提供填写建议、不会自动提交申请；提交与结果核验由投递流程处理。
+资料插件与浏览器控制工具是两项不同准备。扩展启用、个人资料录入及必要登录需要使用者在浏览器完成；本包安装器不会静默安装扩展。提交与结果核验由投递流程处理。
+
+本地兼容方案已在虚构表单和 service worker 中验证基础填写、缺失字段留空、重复岗位拦截；复杂 ATS、附件上传与 OCR 准确率尚未完成端到端验收，不能声称全面等效替代。具体接入、上游问题和测试边界见 [本地扩展说明](skills/job-apply/references/autumn-tracker.md)。
 
 核心进度管理已随包提供，不依赖另外下载 offer skill。浏览器优先使用已连接且支持用户指定浏览器的工具；可选使用 MIT 开源项目 [huashu-chrome](https://github.com/alchaincyf/huashu-chrome)。浏览器工具是单独的软件依赖，不是被复制进本仓库的 skill。其他环境的电脑控制、PDF 或简历编辑技能按需使用，不打包专有插件。
 
@@ -44,6 +47,14 @@ OfferLink 与浏览器控制工具是两项不同准备。OfferLink 的插件启
 ~~~sh
 python install.py
 ~~~
+
+连本地简历助手与浏览器控制依赖一起准备：
+
+~~~sh
+python install.py --with-tracker --with-browser
+~~~
+
+--with-tracker 从 [原作者仓库](https://github.com/ljkss/autumn-job-assistant-tracker)下载固定提交并校验源文件，再在个人目录应用兼容处理；输出目录需使用者在浏览器中“加载未打包/已解压的扩展程序”。本仓库只发布自己的接入脚本，不重新分发上游源码。扩展资料与投递记录仍由使用者本地保管。
 
 安装默认尊重 CODEX_HOME；未设置时使用 ~/.codex/skills。支持 Windows、macOS、Linux，需要 Python 3.10+。安装完成后在 Codex 新聊天中使用；必要时重新载入客户端。
 
@@ -68,7 +79,7 @@ python install.py --overwrite
 在聊天里调用：
 
 ~~~text
-使用 $job-apply。先检查我的 OfferLink 插件和已保存简历。
+使用 $job-apply。先检查我的本地秋招助手（或已有 OfferLink）和已保存简历。
 资料核对完成后，问我岗位、城市、行业各自的 1/2/3 优先级。
 根据我的简历和岗位表筛选并投递。
 已投过的公司不再投，先检查站内应聘记录。
