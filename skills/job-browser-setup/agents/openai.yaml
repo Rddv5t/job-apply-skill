@@ -1,0 +1,4 @@
+interface:
+  display_name: "求职浏览器配置"
+  short_description: "为求职投递配置用户真实浏览器连接，验证工具可用并处理登录交接"
+  default_prompt: "使用 $job-browser-setup，检查并配置用于求职投递的浏览器连接。"

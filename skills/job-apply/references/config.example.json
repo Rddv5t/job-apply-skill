@@ -1,0 +1,12 @@
+{
+  "role_priority": ["产品经理", "售前工程师", "售后工程师"],
+  "industry_priority": ["机器人", "智能硬件", "制造业"],
+  "allowed_locations": ["城市甲", "城市乙"],
+  "preferred_locations": ["城市甲"],
+  "allow_overseas": false,
+  "excluded_countries": [],
+  "excluded_regions": [],
+  "duplicate_scope": "company",
+  "excluded_companies": ["示例已投公司"],
+  "company_aliases": {"示例公司英文名": "示例已投公司"}
+}
