@@ -69,7 +69,7 @@ def main():
         shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     if args.with_tracker:
         tracker_dest = args.target.expanduser().absolute().parent / "job-apply-runtime" / (
-            "autumn-tracker-" + "a24b328" + "-compat-v2")
+            "autumn-tracker-" + "a24b328" + "-compat-v3")
         command = [sys.executable, str(root / "skills/job-apply/scripts/prepare_autumn_tracker.py"),
                    "--dest", str(tracker_dest)]
         if args.dry_run:

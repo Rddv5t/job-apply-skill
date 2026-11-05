@@ -11,7 +11,7 @@ from pathlib import Path
 REPO = "ljkss/autumn-job-assistant-tracker"
 COMMIT = "a24b328aef7d62bf81ee4d4581b701a45ebe848e"
 EMPTY_RESUME = {"优先信息": {}, "基本信息": {}, "教育经历": [],
-                "实习经历": [], "项目经历": [], "竞赛与技能": {}}
+                "实习经历": [], "项目经历": [], "获奖经历": [], "校园经历": [], "竞赛与技能": {}}
 
 
 def request(url):
@@ -55,6 +55,47 @@ def replace_once(source, old, new):
     if source.count(old) != 1:
         raise ValueError(f"Upstream compatibility marker changed: {old[:55]}")
     return source.replace(old, new, 1)
+
+
+def patch_profile_editor(destination):
+    """Upgrade only extension files; browser profile/records are never written."""
+    adapter = Path(__file__).resolve().parents[1] / "assets" / "resume-editor.js"
+    (destination / "job-apply-resume-editor.js").write_bytes(adapter.read_bytes())
+    path = destination / "dashboard.js"
+    source = path.read_text(encoding="utf-8")
+    if "JobApplyResumeEditor.render" not in source:
+        start = source.index("  function renderResumeEditor() {")
+        end = source.index("  // 添加 KV", start)
+        source = source[:start] + """
+  function renderResumeEditor() {
+    window.JobApplyResumeEditor.render(document, currentResume);
+  }
+
+""" + source[end:]
+        start = source.index("  async function collectAndSaveResume() {")
+        end = source.index("  $('#saveAllResumeBtn')", start)
+        source = source[:start] + """
+  async function collectAndSaveResume() {
+    try {
+      const updated = window.JobApplyResumeEditor.collect(document, currentResume);
+      await storageSet(RESUME_STORAGE_KEY, updated);
+      currentResume = updated;
+      saveSnapshot(records, currentResume);
+      showToast('简历全部模块已保存并同步');
+    } catch (error) {
+      showToast('保存未完成：' + error.message);
+    }
+  }
+
+""" + source[end:]
+        path.write_text(source, encoding="utf-8")
+    html_path = destination / "dashboard.html"
+    markup = html_path.read_text(encoding="utf-8")
+    if 'src="job-apply-resume-editor.js"' not in markup:
+        markup = replace_once(markup, '<script src="dashboard.js"></script>',
+                              '<script src="job-apply-resume-editor.js"></script>\n'
+                              '  <script src="dashboard.js"></script>')
+        html_path.write_text(markup, encoding="utf-8")
 
 
 def patch_source(destination):
@@ -141,15 +182,17 @@ def patch_source(destination):
           continue;
         }""")
         path.write_text(source, encoding="utf-8")
+    patch_profile_editor(destination)
     manifest_path = destination / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["version_name"] = "2.0.0 - job-apply local compatibility"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (destination / "JOB_APPLY_LOCAL_PATCH.json").write_text(json.dumps({
-        "upstream": REPO, "commit": COMMIT,
+        "upstream": REPO, "commit": COMMIT, "compatVersion": 3,
         "changes": ["empty initial profile and records", "explicit values only",
                     "skip repeated native field labels", "reject duplicate captured jobs",
-                    "empty-record backup import support"],
+                    "empty-record backup import support",
+                    "render and preserve every imported resume module"],
     }, indent=2) + "\n", encoding="utf-8")
 
 
