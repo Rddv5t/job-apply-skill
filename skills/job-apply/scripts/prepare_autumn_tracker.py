@@ -57,6 +57,31 @@ def replace_once(source, old, new):
     return source.replace(old, new, 1)
 
 
+def patch_record_control(destination):
+    asset = Path(__file__).resolve().parents[1] / "assets" / "record-control.js"
+    (destination / "job-apply-record-control.js").write_bytes(asset.read_bytes())
+    manifest_path = destination / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    for entry in manifest["content_scripts"]:
+        if "content.js" in entry.get("js", []) and "job-apply-record-control.js" not in entry["js"]:
+            entry["js"].append("job-apply-record-control.js")
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path = destination / "dashboard.js"
+    source = path.read_text(encoding="utf-8")
+    marker = "  // ================= 初始化启动 ================="
+    if "JOB_APPLY_RECORD_REFRESH" not in source:
+        source = replace_once(source, marker, """
+  // JOB_APPLY_RECORD_REFRESH: update only the record view, never reload the resume editor.
+  chrome.storage.onChanged?.addListener((changes, area) => {
+    if (area === 'local' && changes[RECORDS_STORAGE_KEY]) {
+      loadRecords();
+    }
+  });
+
+""" + marker)
+        path.write_text(source, encoding="utf-8")
+
+
 def patch_profile_editor(destination):
     """Upgrade only extension files; browser profile/records are never written."""
     adapter = Path(__file__).resolve().parents[1] / "assets" / "resume-editor.js"
@@ -183,16 +208,18 @@ def patch_source(destination):
         }""")
         path.write_text(source, encoding="utf-8")
     patch_profile_editor(destination)
+    patch_record_control(destination)
     manifest_path = destination / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest["version_name"] = "2.0.0 - job-apply local compatibility"
+    manifest["version_name"] = "2.0.0 - job-apply local compatibility v4"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (destination / "JOB_APPLY_LOCAL_PATCH.json").write_text(json.dumps({
-        "upstream": REPO, "commit": COMMIT, "compatVersion": 3,
+        "upstream": REPO, "commit": COMMIT, "compatVersion": 4,
         "changes": ["empty initial profile and records", "explicit values only",
                     "skip repeated native field labels", "reject duplicate captured jobs",
                     "empty-record backup import support",
-                    "render and preserve every imported resume module"],
+                    "render and preserve every imported resume module",
+                    "local record controls for huashu automation"],
     }, indent=2) + "\n", encoding="utf-8")
 
 

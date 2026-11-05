@@ -15,6 +15,7 @@
 | tracker.py | 无第三方 Python 依赖，合并 JSON 记录、筛选候选、导出 CSV 与可搜索 HTML |
 | install.py | 将两个 skill 安装到 Codex，按需安装 huashu-chrome 浏览器工具 |
 | 本地简历助手接入 | 按指定提交下载 autumn tracker，移除示例资料与缺失字段默认推断，支持备份互通 |
+| huashu 记录控制页 | 在本机普通网页直接合并记录并核验结果，无需操作扩展内部页面 |
 
 ## 首次使用顺序
 

@@ -1,5 +1,19 @@
 # 首选资料工具与升级基础：autumn-job-assistant-tracker
 
+## huashu 可操作的记录控制页
+
+兼容版新增 `job-apply-record-control.js`，在普通本机网页提供 huashu 可操作的记录控件，无需跨扩展访问 dashboard。仅在 `http://127.0.0.1:18765/records` 激活；不增加扩展权限，不对外网开放接口，也不接受任意网页 postMessage 指令。
+
+1. 修改扩展目录后，由用户在扩展管理页重新加载秋招助手，再刷新控制页。旧内容脚本不会自动升级。
+2. 用 Python 启动本 skill 的 `scripts/record_control.py`，保留该进程；仅绑定 127.0.0.1，不添加开机启动。
+3. huashu 新建上述本地控制页并保留 tabId，snapshot 确认出现“秋招助手 · 投递记录控制”。
+4. 用 autumn_bridge.py export 生成仅记录 JSON，历史条目也要有来源证据，未知实际日期留空。使用 upload，将本地文件交给 `#job-apply-record-file`，等候校验完成。
+5. 对 `#job-apply-record-sync` 使用真实点击（huashu click 的 real:true），控件拒绝网页脚本模拟提交。读取 `#job-apply-record-result` 和 `#job-apply-record-summary` 核验结果。有“同步成功”并核对条数才算完成；阶段冲突需报告。
+
+只合并记录，不删除文件未包含的既有记录，不访问简历存储键。写入前保留记录备份；筛选/测评/面试/Offer等后续阶段与导入阶段不同时保留并报告冲突。重复同步不增加重复项。看板监听记录变更刷新列表，不重载简历编辑区。
+
+验证：`node tests/record_control.test.cjs`（需 Playwright），覆盖数据校验、记录合并、重复同步、阶段冲突、写入前备份和简历不变。实际用户浏览器须重新加载后再验证，隔离测试不代表已同步。
+
 上游：[ljkss/autumn-job-assistant-tracker](https://github.com/ljkss/autumn-job-assistant-tracker)。
 本次核对提交：a24b328aef7d62bf81ee4d4581b701a45ebe848e。
 README 写 v2.1，manifest 与 dashboard 的版本字段为 2.0.0，按提交定位实现。
