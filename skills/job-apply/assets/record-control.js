@@ -8,7 +8,12 @@
   const stages = new Set(['待投递', '已投递', '筛选中', '笔试', '一面', '二面', 'HR面', 'Offer', '已结束']);
   const advanced = new Set(['筛选中', '笔试', '一面', '二面', 'HR面', 'Offer', '已结束']);
   const normalize = value => String(value || '').normalize('NFKC').replace(/\s+/g, '').toLowerCase();
-  const pair = r => normalize(r.company) + '\0' + normalize(r.position);
+  const position = value => ['', '待补充', '待确认岗位'].includes(String(value || '').trim()) ? '' : normalize(value);
+  const pair = r => normalize(r.company) + '\0' + position(r.position);
+  const canonical = value => JSON.stringify(value, function(key, item) {
+    return item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.keys(item).sort().map(k => [k, item[k]])) : item;
+  });
   const fields = ['id', 'company', 'position', 'city', 'applicationDate', 'stage',
     'jobApplyStatus', 'applicationUrl', 'nextAction', 'source', 'evidence', 'note'];
   const root = document.createElement('section');
@@ -21,6 +26,7 @@
     <button id="job-apply-record-sync" disabled>合并同步投递记录</button>
     <button id="job-apply-record-refresh">刷新看板状态</button>
     <button id="job-apply-record-open">打开扩展看板</button>
+    <button id="job-apply-record-rollback" disabled>撤回上次同步（仅记录）</button>
     <p id="job-apply-record-result" role="status"></p>
     <p id="job-apply-record-summary"></p>`;
   document.body.prepend(root);
@@ -30,6 +36,7 @@
   const result = root.querySelector('#job-apply-record-result');
   let incoming = null;
   let busy = false;
+  let rollbackRows = null;
   function validate(data) {
     if (!data || Array.isArray(data) || typeof data !== 'object' ||
         Object.keys(data).some(k => !['schemaVersion', 'savedAt', 'recordCount', 'records'].includes(k))) {
@@ -56,12 +63,17 @@
     });
   }
   async function refresh() {
-    const data = await chrome.storage.local.get([KEY]);
+    const data = await chrome.storage.local.get([KEY, BACKUP]);
     const rows = Array.isArray(data[KEY]) ? data[KEY] : [];
     const pending = rows.filter(r => r.stage === '待投递').length;
     root.querySelector('#job-apply-record-summary').textContent =
       `扩展已保存：${rows.length}条记录；已投及后续阶段${rows.length - pending}条，待投递${pending}条。`;
     root.dataset.recordCount = String(rows.length);
+    rollbackRows = Array.isArray(data[BACKUP]) ? [...data[BACKUP]].reverse()
+      .find(backup => Array.isArray(backup.records) && canonical(backup.records) !== canonical(rows))?.records : null;
+    root.querySelector('#job-apply-record-rollback').disabled = !Array.isArray(rollbackRows);
+    root.querySelector('#job-apply-record-rollback').textContent = Array.isArray(rollbackRows)
+      ? `撤回上次同步（恢复${rollbackRows.length}条，仅记录）` : '撤回上次同步（无不同版本）';
     return rows;
   }
   fileInput.addEventListener('change', async () => {
@@ -84,10 +96,10 @@
       const merged = current.map(r => ({...r}));
       let added = 0, updated = 0, conflicts = 0;
       for (const row of incoming) {
-        const index = merged.findIndex(r => pair(r) === pair(row) ||
+        const index = merged.findIndex(r => (row.id && r.id === row.id && normalize(r.company) === normalize(row.company)) || pair(r) === pair(row) ||
           (row.applicationUrl && r.applicationUrl === row.applicationUrl));
         if (index < 0) {
-          merged.push({...row, id: crypto.randomUUID(), updatedAt: Date.now()});
+          merged.push({...row, id: row.id || crypto.randomUUID(), updatedAt: Date.now()});
           added++;
         } else {
           const old = merged[index];
@@ -107,11 +119,11 @@
         backups.push({savedAt: new Date().toISOString(), records: current});
         await chrome.storage.local.set({[BACKUP]: backups});
         const latest = (await chrome.storage.local.get([KEY]))[KEY] || [];
-        if (JSON.stringify(latest) !== JSON.stringify(current)) throw new Error('看板记录刚发生变化，请重新同步');
+        if (canonical(latest) !== canonical(current)) throw new Error('看板记录刚发生变化，请重新同步');
         await chrome.storage.local.set({[KEY]: merged});
       }
       const verified = await refresh();
-      if (JSON.stringify(verified) !== JSON.stringify(merged)) throw new Error('保存核验未通过，请重新检查');
+      if (canonical(verified) !== canonical(merged)) throw new Error('保存核验未通过，请重新检查');
       result.textContent = `同步成功：新增${added}，更新${updated}，保留原有后续阶段${conflicts}；共${verified.length}条。简历未修改。`;
       root.dataset.syncStatus = conflicts ? 'conflicts' : 'success';
     } catch (error) {
@@ -120,6 +132,25 @@
     } finally { busy = false; sync.disabled = !incoming; }
   });
   root.querySelector('#job-apply-record-refresh').addEventListener('click', () => refresh().catch(e => {result.textContent = e.message;}));
+  root.querySelector('#job-apply-record-rollback').addEventListener('click', async event => {
+    if (!event.isTrusted || busy) return;
+    busy = true;
+    try {
+      await refresh();
+      if (!Array.isArray(rollbackRows)) throw new Error('没有可恢复的同步前备份');
+      const data = await chrome.storage.local.get([KEY, BACKUP]);
+      const target = rollbackRows;
+      const backups = data[BACKUP];
+      // Keep the current version too, so rollback is itself recoverable.
+      await chrome.storage.local.set({[BACKUP]: [...backups, {savedAt:new Date().toISOString(), records:data[KEY]}]});
+      await chrome.storage.local.set({[KEY]: target});
+      const verified = await refresh();
+      if (canonical(verified) !== canonical(target)) throw new Error('恢复核验未通过');
+      result.textContent = `已撤回上次同步，恢复${verified.length}条记录；简历未修改。`;
+      root.dataset.syncStatus = 'rolled-back';
+    } catch (error) { result.textContent = '恢复未完成：' + error.message; }
+    finally { busy = false; }
+  });
   root.querySelector('#job-apply-record-open').addEventListener('click', event => {
     if (event.isTrusted) chrome.runtime.sendMessage({type: 'OPEN_DASHBOARD', targetHash: '#records'});
   });
