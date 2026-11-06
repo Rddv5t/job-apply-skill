@@ -16,6 +16,25 @@ spec.loader.exec_module(tracker)
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_configured_role_and_industry_exclusions(self):
+        config = {"role_priority": ["产品经理"],
+                  "excluded_role_keywords": ["市场", "营销", "GTM", "软件产品经理"],
+                  "excluded_industry_keywords": ["电子烟"]}
+        cases = [
+            ({"position": "GTM产品经理"}, "skip_role"),
+            ({"position": "产品市场实习生"}, "skip_role"),
+            ({"position": "软件产品经理"}, "skip_role"),
+            ({"position": "硬件产品经理", "industry": "电子烟"}, "skip_industry"),
+            ({"position": "硬件产品经理", "industry": "机器人",
+              "description": "参与市场调研，与营销团队协作"}, "eligible"),
+        ]
+        for extra, expected in cases:
+            with self.subTest(extra=extra):
+                candidate = {"company": "示例新公司", "location": "城市甲", **extra}
+                self.assertEqual(tracker.screen(config, [candidate], [])[0]["decision"], expected)
+        candidate = {"company": "示例新公司", "position": "软件产品经理", "location": "城市甲"}
+        self.assertEqual(tracker.screen({}, [candidate], [])[0]["decision"], "eligible")
+
     def test_company_alias_and_unknown_previous_role(self):
         config = {"company_aliases": {"Example EN": "示例甲"}, "duplicate_scope": "company"}
         history = [{"company": "示例甲", "status": "已投递", "position": ""}]

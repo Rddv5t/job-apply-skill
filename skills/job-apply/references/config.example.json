@@ -7,6 +7,8 @@
   "allow_overseas": false,
   "excluded_countries": [],
   "excluded_regions": [],
+  "excluded_role_keywords": [],
+  "excluded_industry_keywords": [],
   "duplicate_scope": "company",
   "excluded_companies": ["示例已投公司"],
   "company_aliases": {"示例公司英文名": "示例已投公司"}

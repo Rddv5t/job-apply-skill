@@ -78,6 +78,10 @@ def screen(config, candidates, history):
             decision, reason = "review_duplicate", "历史岗位未知，先核验再决定"
         elif previous and any(norm(h.get("position", "")) == norm(r.get("position", "")) for h in previous):
             decision, reason = "skip_duplicate", "同公司同岗位已有记录"
+        elif matches(r.get("position", ""), config.get("excluded_role_keywords", [])):
+            decision, reason = "skip_role", "岗位名称命中使用者排除规则"
+        elif matches(r.get("industry", ""), config.get("excluded_industry_keywords", [])):
+            decision, reason = "skip_industry", "业务行业命中使用者排除规则"
         elif matches(r.get("country", "") + " " + r.get("location", ""),
                      config.get("excluded_countries", [])):
             decision, reason = "skip_location", "位于排除国家"

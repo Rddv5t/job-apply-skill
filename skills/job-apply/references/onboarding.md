@@ -44,6 +44,7 @@
 - 行业排序写入 industry_priority。
 - 只有使用者明确“只去这些城市”时，才把这些城市写入 allowed_locations；偏好排序本身不等于硬性限制。
 - 海外范围另记 allow_overseas、excluded_countries 和 excluded_regions。
+- 明确不考虑的岗位关键词与业务行业分别记 excluded_role_keywords、excluded_industry_keywords；例如使用者明确排除市场/营销/GTM、软件产品经理或电子烟时再保存，不能默认替所有使用者选择。筛选脚本只匹配岗位名称/行业字段，隐含的软件方向及业务归属仍需阅读 JD 核验。
 
 保存到个人工作目录的 config.json，然后用“岗位：1…2…3…；城市：1…2…3…；行业：1…2…3…”复述，并标明硬性地点限制。信息完整且投递已获授权时继续，不额外制造一轮审批；尚未授权投递则只准备筛选与草稿。
 

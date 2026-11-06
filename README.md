@@ -91,6 +91,8 @@ python install.py --overwrite
 
 也可以只要求“先筛选不要投递”“整理历史投递”“暂停并交接”。未授权投递时不会把筛选请求当成提交授权。自动化遇到登录、验证码、扫码或不能确认的结果时交还给人，不重复点击提交。
 
+支持按个人配置的 `excluded_role_keywords`、`excluded_industry_keywords` 排除岗位与行业，优先于意向排序；示例默认为空，不替下载者预设禁投方向。先批量筛选再填写，同平台复用已保存材料，每份成功后增量同步记录。飞书招聘、Bonjour 和独立官网的实际核验要点见 [平台流程](skills/job-apply/references/platform-playbooks.md)。真实资料、项目商品链接及 `*.local.json` / `*.private.json` 留在本机，不随包发布。
+
 ## 进度工具
 
 把示例配置复制到自己的工作目录再填写；不要把真实数据放进这个公开仓库。
